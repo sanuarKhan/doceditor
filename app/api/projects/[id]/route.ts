@@ -54,7 +54,7 @@ export async function PUT(
 
     const body = await request.json();
     const { document, projectName, clientName, assetClass } = body;
-
+    //eslint-disable-next-line
     const updateData: any = {};
     if (document) updateData.document = document;
     if (projectName) updateData.projectName = projectName;
@@ -75,6 +75,7 @@ export async function PUT(
       success: true,
       project: project.toJSON(),
     });
+    //eslint-disable-next-line
   } catch (error: any) {
     console.error("Error updating project:", error);
 

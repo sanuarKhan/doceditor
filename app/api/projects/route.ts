@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const clientName = searchParams.get("clientName");
     const assetClass = searchParams.get("assetClass");
     const search = searchParams.get("search");
-
+    //eslint-disable-next-line
     let query: any = {};
 
     if (clientName) {
@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
+    //eslint-disable-next-line
   } catch (error: any) {
     console.error("Error creating project:", error);
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Zap, Upload, Edit3 } from "lucide-react";
+import { Zap, Upload, Edit3 } from "lucide-react";
 
 export default function HomePage() {
   return (

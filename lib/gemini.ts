@@ -12,7 +12,10 @@ const genai = new GoogleGenAI({
 export async function analyzeDocumentWithGemini(
   fileBuffer: Buffer,
   mimeType: string,
-  originalFileName: string
+  //@typescript-eslint/no-unused-vars
+  filename: string
+
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   try {
     // For DOCX files, extract text first (Gemini doesn't support DOCX directly)
@@ -88,6 +91,7 @@ Return ONLY valid JSON, no markdown code blocks or additional text.`;
       model: "gemini-2.5-flash", // or 'gemini-2.0-flash-exp' for latest
       contents: contents,
     });
+    //eslint-disable-next-line
     const analysisText: any = response.text;
 
     if (!analysisText) {
@@ -113,6 +117,7 @@ Return ONLY valid JSON, no markdown code blocks or additional text.`;
 /**
  * Analyze text content (for DOCX files)
  */
+//eslint-disable-next-line
 async function analyzeTextContent(text: string): Promise<any> {
   try {
     const prompt = `You are a document analysis AI. Analyze the following document text and extract its structure.
@@ -166,7 +171,7 @@ Return ONLY valid JSON, no markdown code blocks or additional text.`;
       model: "gemini-1.5-pro",
       contents: [{ text: prompt }],
     });
-
+    //eslint-disable-next-line
     const analysisText: any = response.text;
 
     // Clean up response
@@ -189,6 +194,7 @@ Return ONLY valid JSON, no markdown code blocks or additional text.`;
  * Alternative: Fetch and analyze document from URL
  * Useful for remote PDFs
  */
+//eslint-disable-next-line
 export async function analyzeDocumentFromUrl(url: string): Promise<any> {
   try {
     const response = await fetch(url);

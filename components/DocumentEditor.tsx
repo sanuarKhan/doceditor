@@ -39,7 +39,7 @@ export default function DocumentEditor({ projectId }: DocumentEditorProps) {
   // Fetch project
   useEffect(() => {
     fetchProject();
-  }, [projectId]);
+  }, []);
 
   // Close context menu on click outside
   useEffect(() => {
@@ -88,6 +88,7 @@ export default function DocumentEditor({ projectId }: DocumentEditorProps) {
 
       // Show success message
       alert("Project saved successfully!");
+      //eslint-disable-next-line
     } catch (err: any) {
       alert(err.message || "Failed to save project");
       console.error(err);

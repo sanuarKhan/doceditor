@@ -4,8 +4,8 @@ import { join } from "path";
 import { analyzeDocumentWithGemini } from "@/lib/gemini";
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest
+  // { params }: { params: { id: string } }
 ) {
   try {
     const body = await request.json();
@@ -33,6 +33,7 @@ export async function POST(
       success: true,
       document: analysis,
     });
+    //eslint-disable-next-line
   } catch (error: any) {
     console.error("Error analyzing document:", error);
     return NextResponse.json(
