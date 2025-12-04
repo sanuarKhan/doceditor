@@ -37,9 +37,9 @@ export default function DocumentEditor({ projectId }: DocumentEditorProps) {
   const [editContent, setEditContent] = useState("");
 
   // Fetch project
-  useEffect(() => {
-    fetchProject();
-  }, [projectId, project]);
+  // useEffect(() => {
+  //   fetchProject();
+  // }, [projectId]);
 
   // Close context menu on click outside
   useEffect(() => {
