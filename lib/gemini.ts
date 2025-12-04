@@ -11,9 +11,7 @@ const genai = new GoogleGenAI({
  */
 export async function analyzeDocumentWithGemini(
   fileBuffer: Buffer,
-  mimeType: string,
-  //@typescript-eslint/no-unused-vars
-  filename: string
+  mimeType: string
 
   //eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
@@ -204,7 +202,7 @@ export async function analyzeDocumentFromUrl(url: string): Promise<any> {
     const mimeType = response.headers.get("content-type") || "application/pdf";
     const filename = url.split("/").pop() || "document";
 
-    return await analyzeDocumentWithGemini(buffer, mimeType, filename);
+    return await analyzeDocumentWithGemini(buffer, mimeType);
   } catch (error) {
     console.error("Error analyzing document from URL:", error);
     throw new Error(`Failed to analyze document from URL: ${error}`);

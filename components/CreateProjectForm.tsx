@@ -128,6 +128,7 @@ export default function CreateProjectForm() {
       setTimeout(() => {
         router.push(`/projects/${project._id}`);
       }, 1000);
+      // eslint-disable-next-line
     } catch (err: any) {
       console.error("Error:", err);
       setError(err.message || "Failed to create project");
