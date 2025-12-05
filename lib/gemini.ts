@@ -116,6 +116,11 @@ Return ONLY valid JSON, no markdown code blocks or additional text.`;
     } else if (cleanText.startsWith("```")) {
       cleanText = cleanText.replace(/```\n?/g, "");
     }
+    if (cleanText.endsWith("```")) {
+      cleanText = cleanText.slice(0, -3);
+    }
+    cleanText = cleanText.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+    cleanText = cleanText.trim();
 
     const analysis = JSON.parse(cleanText) as DocumentAnalysis;
     return analysis;

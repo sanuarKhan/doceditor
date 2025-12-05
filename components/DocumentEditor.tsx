@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ChevronDown,
   ChevronRight,
-  Edit3,
+  
   FileText,
   Loader2,
   ArrowLeft,
@@ -488,6 +488,8 @@ export default function DocumentEditor({
             onClick={() => {
               setSelectedElement(null);
               setContextMenu(null);
+              setEditingId(null);
+              toggleSection(contextMenu.element.id);
             }}
             className="w-full px-4 py-2 text-left text-sm hover:bg-gray-800 flex items-center gap-2 border-t border-gray-700 mt-1"
           >
