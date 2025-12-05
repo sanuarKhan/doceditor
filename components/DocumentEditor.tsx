@@ -11,6 +11,8 @@ import {
   ArrowLeft,
   Save,
   Download,
+  Plus,
+  Minus,
 } from "lucide-react";
 import { IProject, ISection } from "@/types";
 
@@ -38,11 +40,6 @@ export default function DocumentEditor({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
 
-  // //Fetch project
-  // useEffect(() => {
-  //   fetchProject();
-  // }, [projectId]);
-
   // Close context menu on click outside
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
@@ -51,25 +48,6 @@ export default function DocumentEditor({
       return () => document.removeEventListener("click", handleClick);
     }
   }, [contextMenu]);
-
-  // const fetchProject = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await fetch(`/api/projects/${projectId}`);
-  //     const data = await response.json();
-
-  //     if (data.success) {
-  //       setProject(data.project);
-  //     } else {
-  //       setError(data.error || "Failed to fetch project");
-  //     }
-  //   } catch (err) {
-  //     setError("Failed to load project");
-  //     console.error(err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const saveProject = async () => {
     if (!project) return;
@@ -243,7 +221,7 @@ export default function DocumentEditor({
             ${depth > 0 ? "ml-8" : ""}
           `}
         >
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 relative">
             {/* Badge */}
             {autoSelect && (
               <div
@@ -278,7 +256,7 @@ export default function DocumentEditor({
             )}
 
             {/* Content */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 ">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-semibold text-gray-900">
                   {element.number}
@@ -332,9 +310,13 @@ export default function DocumentEditor({
                   e.stopPropagation();
                   startEditing(element);
                 }}
-                className="opacity-0 group-hover:opacity-100 transition"
+                className="opacity-0 group-hover:opacity-100 transition absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
               >
-                <Edit3 className="w-4 h-4 text-gray-600" />
+                {isSelected ? (
+                  <Minus className="w-15 h-8 text-black font-bold rounded border-2 border-gray-800 " />
+                ) : (
+                  <Plus className="w-15 h-8 text-black font-bold rounded border-2 border-gray-800 " />
+                )}
               </button>
             )}
           </div>
