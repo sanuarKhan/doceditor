@@ -75,6 +75,7 @@ export default function DocumentEditor({
     if (!project) return;
 
     try {
+      setLoading(true);
       setSaving(true);
       const response = await fetch(`/api/projects/${project._id}`, {
         method: "PUT",
@@ -92,7 +93,8 @@ export default function DocumentEditor({
       alert("Project saved successfully!");
       //eslint-disable-next-line
     } catch (err: any) {
-      alert(err.message || "Failed to save project");
+      setError(err.message || "Failed to save project");
+      // alert(err.message || "Failed to save project");
       console.error(err);
     } finally {
       setSaving(false);

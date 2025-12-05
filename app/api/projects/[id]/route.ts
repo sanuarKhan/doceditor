@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Project from "@/models/Project";
 import mongoose from "mongoose";
+import { IProject } from "@/types";
 
 // GET single project
 export async function GET(
@@ -46,10 +47,7 @@ export async function PUT(
 ) {
   try {
     await connectDB();
-
-    // ✅ Await params
     const { id } = await context.params;
-
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Invalid project ID" },
@@ -60,7 +58,7 @@ export async function PUT(
     const body = await request.json();
     const { document, projectName, clientName, assetClass } = body;
 
-    const updateData: any = {};
+    const updateData: Partial<IProject> = {};
     if (document) updateData.document = document;
     if (projectName) updateData.projectName = projectName;
     if (clientName) updateData.clientName = clientName;
@@ -80,11 +78,10 @@ export async function PUT(
       success: true,
       project: project.toJSON(),
     });
-    //eslint-disable-next-line
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating project:", error);
 
-    if (error.name === "ValidationError") {
+    if (error instanceof Error && error.name === "ValidationError") {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
@@ -103,7 +100,6 @@ export async function DELETE(
   try {
     await connectDB();
 
-    // ✅ Await params
     const { id } = await context.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -123,7 +119,7 @@ export async function DELETE(
       success: true,
       message: "Project deleted successfully",
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error deleting project:", error);
     return NextResponse.json(
       { error: "Failed to delete project" },

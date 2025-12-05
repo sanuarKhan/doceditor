@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       projects,
       count: projects.length,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching projects:", error);
     return NextResponse.json(
       { error: "Failed to fetch projects" },
@@ -88,11 +88,10 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-    //eslint-disable-next-line
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating project:", error);
 
-    if (error.name === "ValidationError") {
+    if (error instanceof Error && error.name === "ValidationError") {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
