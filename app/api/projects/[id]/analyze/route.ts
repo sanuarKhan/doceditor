@@ -4,10 +4,12 @@ import { join } from "path";
 import { analyzeDocumentWithGemini } from "@/lib/gemini";
 
 export async function POST(
-  request: NextRequest
-  // { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
+
     const body = await request.json();
     const { filename, mimeType } = body;
 
@@ -22,12 +24,8 @@ export async function POST(
     const filepath = join(process.cwd(), "public", "uploads", filename);
     const fileBuffer = await readFile(filepath);
 
-    // Analyze with Gemini (handles PDFs, images, and DOCX)
-    const analysis = await analyzeDocumentWithGemini(
-      fileBuffer,
-      mimeType,
-      filename
-    );
+    // Analyze with Gemini
+    const analysis = await analyzeDocumentWithGemini(fileBuffer, mimeType);
 
     return NextResponse.json({
       success: true,

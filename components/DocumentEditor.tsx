@@ -15,13 +15,15 @@ import {
 import { IProject, ISection } from "@/types";
 
 interface DocumentEditorProps {
-  projectId: string;
+  initialProject: IProject;
 }
 
-export default function DocumentEditor({ projectId }: DocumentEditorProps) {
+export default function DocumentEditor({
+  initialProject,
+}: DocumentEditorProps) {
   const router = useRouter();
-  const [project, setProject] = useState<IProject | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [project, setProject] = useState<IProject | null>(initialProject);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,7 +38,7 @@ export default function DocumentEditor({ projectId }: DocumentEditorProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
 
-  // Fetch project
+  // //Fetch project
   // useEffect(() => {
   //   fetchProject();
   // }, [projectId]);
@@ -50,31 +52,31 @@ export default function DocumentEditor({ projectId }: DocumentEditorProps) {
     }
   }, [contextMenu]);
 
-  const fetchProject = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/projects/${projectId}`);
-      const data = await response.json();
+  // const fetchProject = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await fetch(`/api/projects/${projectId}`);
+  //     const data = await response.json();
 
-      if (data.success) {
-        setProject(data.project);
-      } else {
-        setError(data.error || "Failed to fetch project");
-      }
-    } catch (err) {
-      setError("Failed to load project");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (data.success) {
+  //       setProject(data.project);
+  //     } else {
+  //       setError(data.error || "Failed to fetch project");
+  //     }
+  //   } catch (err) {
+  //     setError("Failed to load project");
+  //     console.error(err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const saveProject = async () => {
     if (!project) return;
 
     try {
       setSaving(true);
-      const response = await fetch(`/api/projects/${projectId}`, {
+      const response = await fetch(`/api/projects/${project._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ document: project.document }),
@@ -473,7 +475,7 @@ export default function DocumentEditor({ projectId }: DocumentEditorProps) {
       {/* Context Menu */}
       {contextMenu && (
         <div
-          className="fixed z-50 bg-gray-900 text-white rounded-lg shadow-xl py-2 min-w-[160px]"
+          className="fixed z-50 bg-gray-900 text-white rounded-lg shadow-xl py-2 min-w-40"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >

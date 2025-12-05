@@ -6,19 +6,21 @@ import mongoose from "mongoose";
 // GET single project
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    const { id } = await context.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Invalid project ID" },
         { status: 400 }
       );
     }
 
-    const project = await Project.findById(params.id).lean();
+    const project = await Project.findById(id).lean();
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -40,12 +42,15 @@ export async function GET(
 // PUT update project
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    // ✅ Await params
+    const { id } = await context.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Invalid project ID" },
         { status: 400 }
@@ -54,7 +59,7 @@ export async function PUT(
 
     const body = await request.json();
     const { document, projectName, clientName, assetClass } = body;
-    //eslint-disable-next-line
+
     const updateData: any = {};
     if (document) updateData.document = document;
     if (projectName) updateData.projectName = projectName;
@@ -62,7 +67,7 @@ export async function PUT(
     if (assetClass) updateData.assetClass = assetClass;
 
     const project = await Project.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: updateData },
       { new: true, runValidators: true }
     );
@@ -93,19 +98,22 @@ export async function PUT(
 // DELETE project
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    // ✅ Await params
+    const { id } = await context.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Invalid project ID" },
         { status: 400 }
       );
     }
 
-    const project = await Project.findByIdAndDelete(params.id);
+    const project = await Project.findByIdAndDelete(id);
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
