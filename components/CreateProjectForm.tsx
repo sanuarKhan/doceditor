@@ -88,8 +88,9 @@ export default function CreateProjectForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          filename: uploadData.filename,
+          url: uploadData.url, // Blob URL
           mimeType: uploadData.type,
+          filename: uploadData.originalName,
         }),
       });
 
@@ -128,10 +129,11 @@ export default function CreateProjectForm() {
       setTimeout(() => {
         router.push(`/projects/${project._id}`);
       }, 1000);
-      // eslint-disable-next-line
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error:", err);
-      setError(err.message || "Failed to create project");
+      const message =
+        err instanceof Error ? err.message : "Failed to create project";
+      setError(message);
       setCurrentStep("form");
       setUploading(false);
       setAnalyzing(false);

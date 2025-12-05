@@ -1,3 +1,4 @@
+import { DocumentAnalysis } from "@/types";
 import { GoogleGenAI } from "@google/genai";
 import mammoth from "mammoth";
 
@@ -9,12 +10,25 @@ const genai = new GoogleGenAI({
  * Process document directly with Gemini (supports PDFs natively!)
  * Using the NEW @google/genai package
  */
+// interface DocumentAnalysis {
+//   title: string;
+//   subtitle: string;
+//   sections: Array<{
+//     id: string;
+//     type: "section" | "question";
+//     number: string;
+//     title?: string;
+//     content: string;
+//     expanded?: boolean;
+//     editable?: boolean;
+//     children?: unknown[];
+//   }>;
+// }
+
 export async function analyzeDocumentWithGemini(
   fileBuffer: Buffer,
   mimeType: string
-
-  //eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any> {
+): Promise<DocumentAnalysis> {
   try {
     // For DOCX files, extract text first (Gemini doesn't support DOCX directly)
     if (
@@ -84,15 +98,14 @@ Return ONLY valid JSON, no markdown code blocks or additional text.`;
       },
     ];
 
-    // NEW API: Using generateContent from @google/genai
     const response = await genai.models.generateContent({
-      model: "gemini-2.5-flash", // or 'gemini-2.0-flash-exp' for latest
+      model: "gemini-2.5-flash",
       contents: contents,
     });
-    //eslint-disable-next-line
-    const analysisText: any = response.text;
 
-    if (!analysisText) {
+    const analysisText = response.text;
+
+    if (!analysisText || typeof analysisText !== "string") {
       throw new Error("Gemini response returned no text content.");
     }
 
@@ -104,11 +117,12 @@ Return ONLY valid JSON, no markdown code blocks or additional text.`;
       cleanText = cleanText.replace(/```\n?/g, "");
     }
 
-    const analysis = JSON.parse(cleanText);
+    const analysis = JSON.parse(cleanText) as DocumentAnalysis;
     return analysis;
   } catch (error) {
     console.error("Error analyzing document with Gemini:", error);
-    throw new Error(`Failed to analyze document: ${error}`);
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to analyze document: ${message}`);
   }
 }
 

@@ -32,3 +32,18 @@ export interface IProject {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface DocumentAnalysis {
+  title: string;
+  subtitle: string;
+  sections: Array<{
+    id: string;
+    type: "section" | "question";
+    number: string;
+    title?: string;
+    content: string;
+    expanded?: boolean;
+    editable?: boolean;
+    children?: unknown[];
+  }>;
+}
