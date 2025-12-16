@@ -54,8 +54,8 @@ export default async function ProjectEditorPage({ params }: PageProps) {
     // Pass the checked/defaulted document
     document: project.document as IDocument,
 
-    createdAt: project.createdAt.toISOString(),
-    updatedAt: project.updatedAt.toISOString(),
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
   };
 
   return <DocumentEditor initialProject={sanitizedProject} />;

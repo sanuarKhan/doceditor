@@ -1,3 +1,4 @@
+const { httpServerHandler } = require('cloudflare:node');
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -54,3 +55,7 @@ app.post('/parse', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = {
+  fetch: httpServerHandler(app)
+};

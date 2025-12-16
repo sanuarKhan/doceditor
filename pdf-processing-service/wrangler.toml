@@ -1,0 +1,9 @@
+name = "pdf-parser"
+main = "index.js"
+compatibility_date = "2025-08-15" # Must be after Aug 2025
+compatibility_flags = [ 
+  "nodejs_compat", 
+  "enable_nodejs_http_server_modules" 
+]
+[build]
+command = "npm install"
