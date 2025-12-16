@@ -1,48 +1,44 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, X, Loader2, FileText, CheckCircle } from "lucide-react";
+import { X, Loader2, FileText, CheckCircle } from "lucide-react";
+import { UploadButton } from "@/utils/uploadthing";
+
 
 export default function CreateProjectForm() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<{
+    projectName: string;
+    clientName: string;
+    assetClass: string;
+    uploadedFile: {
+      name: string;
+      url: string;
+      key: string;
+      size: number;
+    } | null;
+  }>({
     projectName: "",
     clientName: "",
     assetClass: "",
-    file: null as File | null,
+    uploadedFile: null,
   });
 
-  const [uploading, setUploading] = useState(false);
+
+
   const [analyzing, setAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState<
     "form" | "uploading" | "analyzing" | "done"
   >("form");
+
   const [error, setError] = useState("");
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
 
-      // Validate file size (10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setError("File size must be less than 10MB");
-        return;
-      }
 
-      setFormData({ ...formData, file });
-      setError("");
-    }
-  };
 
-  const removeFile = () => {
-    setFormData({ ...formData, file: null });
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,44 +49,25 @@ export default function CreateProjectForm() {
       !formData.projectName ||
       !formData.clientName ||
       !formData.assetClass ||
-      !formData.file
+      !formData.uploadedFile
     ) {
       setError("Please fill all required fields");
       return;
     }
 
     try {
-      // Step 1: Upload file
-      setCurrentStep("uploading");
-      setUploading(true);
-
-      const uploadFormData = new FormData();
-      uploadFormData.append("file", formData.file);
-
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: uploadFormData,
-      });
-
-      if (!uploadRes.ok) {
-        const errorData = await uploadRes.json();
-        throw new Error(errorData.error || "File upload failed");
-      }
-
-      const uploadData = await uploadRes.json();
-      setUploading(false);
-
-      // Step 2: Analyze document
+      // 3. Analyze Document
       setCurrentStep("analyzing");
       setAnalyzing(true);
 
-      const analyzeRes = await fetch("/api/projects/temp/analyze", {
+
+      const analyzeRes = await fetch("/api/analyze-document", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          url: uploadData.url, // Blob URL
-          mimeType: uploadData.type,
-          filename: uploadData.originalName,
+          url: formData.uploadedFile.url, // Use formData.uploadedFile.url
+          mimeType: "application/pdf", // Assuming PDF based on service, as type is not available from uploadthing
+          filename: formData.uploadedFile.name // Use formData.uploadedFile.name
         }),
       });
 
@@ -100,9 +77,8 @@ export default function CreateProjectForm() {
       }
 
       const { document } = await analyzeRes.json();
-      setAnalyzing(false);
 
-      // Step 3: Create project
+      // Step 2: Create project with analyzed data
       const createRes = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,9 +86,9 @@ export default function CreateProjectForm() {
           projectName: formData.projectName,
           clientName: formData.clientName,
           assetClass: formData.assetClass,
-          sourceFileName: uploadData.originalName,
-          sourceFileUrl: uploadData.url,
-          sourceFileMimeType: uploadData.type,
+          sourceFileName: formData.uploadedFile.name,
+          sourceFileUrl: formData.uploadedFile.url,
+          sourceFileMimeType: "application/pdf", // Assuming PDF based on service
           document,
         }),
       });
@@ -124,6 +100,7 @@ export default function CreateProjectForm() {
 
       const { project } = await createRes.json();
       setCurrentStep("done");
+      setAnalyzing(false);
 
       // Navigate to the new project
       setTimeout(() => {
@@ -135,7 +112,6 @@ export default function CreateProjectForm() {
         err instanceof Error ? err.message : "Failed to create project";
       setError(message);
       setCurrentStep("form");
-      setUploading(false);
       setAnalyzing(false);
     }
   };
@@ -145,17 +121,7 @@ export default function CreateProjectForm() {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
         <div className="max-w-md mx-auto text-center">
-          {currentStep === "uploading" && (
-            <>
-              <Loader2 className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Uploading Document...
-              </h3>
-              <p className="text-gray-600">
-                Please wait while we upload your file
-              </p>
-            </>
-          )}
+
 
           {currentStep === "analyzing" && (
             <>
@@ -257,49 +223,56 @@ export default function CreateProjectForm() {
             Source Document <span className="text-red-500">*</span>
           </label>
 
-          {formData.file ? (
+          {!formData.uploadedFile ? (
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 hover:bg-blue-50 transition">
+              <UploadButton
+                endpoint="fileUploader"
+                onClientUploadComplete={(res) => {
+                  if (res && res.length > 0) {
+                    const file = res[0];
+                    setFormData(prev => ({
+                      ...prev,
+                      uploadedFile: {
+                        name: file.name,
+                        url: file.url,
+                        key: file.key,
+                        size: file.size,
+                      }
+                    }));
+                    console.log("Files: ", res);
+                    // alert("Upload Completed");
+                  }
+                }}
+                onUploadError={(error: Error) => {
+                  alert(`ERROR! ${error.message}`);
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                PDF, DOCX, DOC, or Images (Max 256MB)
+              </p>
+            </div>
+          ) : (
             <div className="border border-gray-300 rounded-lg p-4 flex items-center justify-between bg-gray-50">
               <div className="flex items-center gap-3">
                 <FileText className="w-5 h-5 text-blue-600" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    {formData.file.name}
+                    {formData.uploadedFile.name}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {(formData.file.size / 1024 / 1024).toFixed(2)} MB
+                    {(formData.uploadedFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={removeFile}
+                onClick={() => setFormData({ ...formData, uploadedFile: null })}
                 className="text-red-500 hover:text-red-700 transition"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-          ) : (
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
-            >
-              <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-700 mb-1">
-                Click to upload document
-              </p>
-              <p className="text-xs text-gray-500">
-                PDF, DOCX, DOC, or Images (Max 10MB)
-              </p>
-            </div>
           )}
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.doc,.docx,image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
         </div>
 
         {/* Submit Buttons */}
@@ -313,10 +286,10 @@ export default function CreateProjectForm() {
           </button>
           <button
             type="submit"
-            disabled={uploading || analyzing}
+            disabled={analyzing}
             className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400 disabled:cursor-not-allowed"
           >
-            {uploading || analyzing ? "Processing..." : "Create Project"}
+            {analyzing ? "Processing..." : "Create Project"}
           </button>
         </div>
       </form>

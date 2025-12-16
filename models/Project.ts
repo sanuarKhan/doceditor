@@ -1,36 +1,5 @@
+import { IDocument, IProject, ISection } from "@/types";
 import mongoose, { Schema, Document, Model } from "mongoose";
-
-// Section Interface
-export interface ISection {
-  id: string;
-  type: "section" | "question";
-  number: string;
-  title?: string;
-  content: string;
-  expanded?: boolean;
-  editable?: boolean;
-  children?: ISection[];
-}
-
-// Document Structure Interface
-export interface IDocument {
-  title: string;
-  subtitle: string;
-  sections: ISection[];
-}
-
-// Project Interface
-export interface IProject extends Document {
-  projectName: string;
-  clientName: string;
-  assetClass: string;
-  sourceFileName: string;
-  sourceFileUrl?: string;
-  sourceFileMimeType?: string;
-  document: IDocument;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 // Section Schema (nested)
 const SectionSchema = new Schema<ISection>(
@@ -41,7 +10,7 @@ const SectionSchema = new Schema<ISection>(
       enum: ["section", "question"],
       required: true,
     },
-    number: { type: String, required: true },
+    number: String,
     title: String,
     content: { type: String, default: "" },
     expanded: { type: Boolean, default: true },

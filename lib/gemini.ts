@@ -33,7 +33,7 @@ export async function analyzeDocumentWithGemini(
     // For DOCX files, extract text first (Gemini doesn't support DOCX directly)
     if (
       mimeType ===
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
       mimeType === "application/msword"
     ) {
       const result = await mammoth.extractRawText({ buffer: fileBuffer });
@@ -134,73 +134,80 @@ Return ONLY valid JSON, no markdown code blocks or additional text.`;
 /**
  * Analyze text content (for DOCX files)
  */
-//eslint-disable-next-line
-async function analyzeTextContent(text: string): Promise<any> {
+export async function analyzeTextContent(text: string): Promise<any> {
   try {
-    const prompt = `You are a document analysis AI. Analyze the following document text and extract its structure.
+    console.log(`[Gemini] Analyzing text length: ${text.length}`);
 
-Identify:
-1. Main sections (usually numbered like "1.0", "2.0", etc.)
-2. Subsections or questions under each main section (like "1.1", "1.2", etc.)
-3. The content/description for each item
+    // Chunking strategy: If text is > 100k chars, we might need a summary first or just hope 1.5 Pro handles it.
+    // For now, attempting with 2.5/1.5 Flash with high token limit.
 
-Return a JSON structure following this schema:
-{
-  "title": "Document title",
-  "subtitle": "Document subtitle or description",
-  "sections": [
+    const prompt = `You are a document analysis AI. Analyze the document structure.
+    
+    1. Extract the document Title and Subtitle.
+    2. Identify ALL main sections (1.0, 2.0...) and subsections/questions (1.1, 1.2...).
+    3. Be exhaustive. Do not skip sections.
+    
+    Return STRICT JSON:
     {
-      "id": "s1",
-      "type": "section",
-      "number": "1.0",
-      "title": "Section title",
-      "content": "",
-      "expanded": true,
-      "editable": false,
-      "children": [
+      "title": "...",
+      "subtitle": "...",
+      "sections": [
         {
-          "id": "q1_1",
-          "type": "question",
-          "number": "1.1",
-          "content": "Question or subsection text",
-          "editable": true
+          "id": "s1", "type": "section", "number": "1.0", "title": "...", "content": "Summary/Intro...", "expanded": true, "editable": false,
+          "children": [
+             { "id": "q1_1", "type": "question", "number": "1.1", "content": "...", "editable": true }
+          ]
         }
       ]
     }
-  ]
-}
+    
+    IMPORTANT:
+    - Return ONLY valid JSON. No markdown fences.
+    - If the document is huge, focus on the structure and first few paragraphs of content per section.
+    - unique IDs: s1, s2... q1_1, q1_2...
+    
+    Document text fragment:
+    ${text.slice(0, 300000)} ... [truncated for prompt limit if needed]
+    `;
 
-IMPORTANT:
-- Generate unique IDs using format: s1, s2, s3 for sections and q1_1, q1_2, q2_1 for questions
-- Use underscores in IDs (not dots): q1_1 not q1.1
-- Set "expanded": true for all sections
-- Set "editable": true for questions, false for sections
-- Extract the actual document title and subtitle from the content
-- Preserve all numbering exactly as it appears in the document
-
-Document text:
-${text}
-
-Return ONLY valid JSON, no markdown code blocks or additional text.`;
-
-    // NEW API: Using generateContent from @google/genai
     const response = await genai.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-2.5-flash", // 1.5 Flash has 1M context window, better for large docs than 2.5-flash-exp potentially? Or verify 2.5 window.
       contents: [{ text: prompt }],
+      config: {
+        responseMimeType: "application/json",
+        maxOutputTokens: 8192, // Maximize output
+      }
     });
-    //eslint-disable-next-line
-    const analysisText: any = response.text;
 
-    // Clean up response
+    const analysisText = response.text; // Correct method call .text() often simpler
+
+    if (!analysisText) throw new Error("Empty response from Gemini");
+
+    // Simple cleanup just in case
     let cleanText = analysisText.trim();
-    if (cleanText.startsWith("```json")) {
-      cleanText = cleanText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
-    } else if (cleanText.startsWith("```")) {
-      cleanText = cleanText.replace(/```\n?/g, "");
+    if (cleanText.startsWith("```json")) cleanText = cleanText.replace(/```json\n?/, "");
+    if (cleanText.startsWith("```")) cleanText = cleanText.replace(/```\n?/, "");
+    if (cleanText.endsWith("```")) cleanText = cleanText.slice(0, -3);
+
+    try {
+      return JSON.parse(cleanText);
+    } catch (parseError) {
+      console.error("JSON Parse failed. Attempting repair...", parseError);
+      // Very basic repair: try to find the last valid closing brace sequence
+      // This is a naive heuristic
+      const lastBrace = cleanText.lastIndexOf("}");
+      if (lastBrace > -1) {
+        const sub = cleanText.substring(0, lastBrace + 1);
+        try {
+          return JSON.parse(sub);
+        } catch (e) {
+          console.error("Repair failed");
+          throw parseError;
+        }
+      }
+      throw parseError;
     }
 
-    const analysis = JSON.parse(cleanText);
-    return analysis;
   } catch (error) {
     console.error("Error analyzing text:", error);
     throw new Error(`Failed to analyze text: ${error}`);

@@ -10,9 +10,37 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
-
     const { id } = await context.params;
+
+    // MOCK DATA FOR VERIFICATION
+    if (id === "mock-project") {
+      return NextResponse.json({
+        success: true,
+        project: {
+          _id: "mock-project",
+          projectName: "Mock Project",
+          clientName: "Mock Client",
+          assetClass: "Venture Capital",
+          document: {
+            title: "Mock Document",
+            subtitle: "For UI Verification",
+            sections: [
+              {
+                id: "sec-1",
+                type: "section",
+                title: "Section 1",
+                number: "1.0",
+                content: "<p>This is a <strong>mock</strong> section.</p>",
+                expanded: true,
+                children: []
+              }
+            ]
+          }
+        },
+      });
+    }
+
+    await connectDB();
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(

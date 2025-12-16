@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
-if (!process.env.MONGODB_URI) {
-  throw new Error("Please add your MongoDB URI to .env.local");
-}
+const MONGODB_URI: string = process.env.MONGODB_URI || "";
 
-const MONGODB_URI: string = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  console.warn("Please add your MongoDB URI to .env.local");
+}
 
 interface MongooseCache {
   conn: typeof mongoose | null;
