@@ -198,7 +198,7 @@ export async function analyzeTextContent(text: string): Promise<any> {
         const sub = cleanText.substring(0, lastBrace + 1);
         try {
           return JSON.parse(sub);
-        } catch (e: unknown) {
+        } catch (error: unknown) {
           console.error("Repair failed");
           throw parseError;
         }
