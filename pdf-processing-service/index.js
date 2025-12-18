@@ -1,61 +1,72 @@
-const { httpServerHandler } = require('cloudflare:node');
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
-const { parsePDF } = require('./lib/parser');
-require('dotenv').config();
+import parsePDF from './lib/parser.js';
 
-const app = express();
-const PORT = process.env.PORT || 4000;
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    
+    // CORS headers
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
 
-app.use(cors());
-app.use(express.json());
-
-// Health check endpoint
-app.get('/', (req, res) => {
-  res.send('PDF Parsing Service is running');
-});
-
-// Parse PDF from URL endpoint
-app.post('/parse', async (req, res) => {
-  try {
-    const { url } = req.body;
-
-    if (!url) {
-      return res.status(400).json({ error: 'URL is required' });
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
     }
 
-    console.log(`[INFO] Received request to parse: ${url}`);
-
-    // Stream download the PDF
-    const response = await axios.get(url, {
-      responseType: 'arraybuffer',
-      maxContentLength: 300 * 1024 * 1024, // 300MB limit check (axios)
-      timeout: 60000 // 60s timeout for download
-    });
-
-    const pdfBuffer = response.data;
-    console.log(`[INFO] Downloaded ${pdfBuffer.length} bytes. Parsing...`);
-
-    // Parse the PDF
-    const text = await parsePDF(pdfBuffer);
-
-    console.log(`[INFO] Parsing complete. Length: ${text.length} chars.`);
-
-    res.json({ text });
-  } catch (error) {
-    console.error('[ERROR] Parsing failed:', error.message);
-    if (error.response) {
-      console.error('[ERROR] Upstream status:', error.response.status);
+    // Health check
+    if (url.pathname === '/' && request.method === 'GET') {
+      return new Response(JSON.stringify({ 
+        status: 'ok',
+        message: 'PDF Parsing Service is running' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
-    res.status(500).json({ error: 'Failed to process PDF', details: error.message });
+
+    // Parse PDF
+    if (url.pathname === '/parse' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const { url: pdfUrl } = body;
+
+        if (!pdfUrl) {
+          return new Response(JSON.stringify({ error: 'URL is required' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        console.log(`[INFO] Parsing: ${pdfUrl}`);
+
+        const response = await fetch(pdfUrl, {
+          signal: AbortSignal.timeout(60000)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Download failed: ${response.status}`);
+        }
+
+        const pdfBuffer = await response.arrayBuffer();
+        const text = await parsePDF(Buffer.from(pdfBuffer));
+
+        return new Response(JSON.stringify({ text }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (error) {
+        console.error('[ERROR]', error);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to process PDF',
+          details: error.message 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
+    return new Response('Not Found', { status: 404, headers: corsHeaders });
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-module.exports = {
-  fetch: httpServerHandler(app)
 };

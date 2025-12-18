@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Loader2, FileText, CheckCircle } from "lucide-react";
-import { UploadButton } from "@/utils/uploadthing";
+import { UploadButton } from "@/lib/uploadthing";
 
 
 export default function CreateProjectForm() {

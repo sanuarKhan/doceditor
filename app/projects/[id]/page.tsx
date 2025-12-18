@@ -18,15 +18,7 @@ export default async function ProjectEditorPage({ params }: PageProps) {
 
   if (!project) return notFound();
 
-  // ------------------------------------------------------------
-  // 👇 FIX: Add a check for the missing 'document' sub-document
-  // ------------------------------------------------------------
   if (!project.document || typeof project.document.title === "undefined") {
-    // Option A: Use a different error page (less likely to be correct here)
-    // return notFound();
-
-    // Option B (Best): Provide a sensible default empty document object
-    // This requires ensuring IDocument structure matches the default you provide.
     console.error(
       `Project ID ${id} is missing a required 'document' sub-document.`
     );

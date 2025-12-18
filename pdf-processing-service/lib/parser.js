@@ -1,4 +1,5 @@
-const pdf = require('pdf-parse');
+
+import pdf from 'pdf-parse';
 
 /**
  * Parses a PDF buffer and returns the text content.
@@ -23,4 +24,4 @@ async function parsePDF(dataBuffer) {
     }
 }
 
-module.exports = { parsePDF };
+export default parsePDF;

@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "Standalone service to parse large PDFs from URL",
     "main": "index.js",
+    "type": "module",
     "scripts": {
         "start": "node index.js",
         "dev": "nodemon index.js"

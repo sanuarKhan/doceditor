@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { IProject, ISection } from "@/types";
 
-
 interface DocumentEditorProps {
   initialProject: IProject;
 }
@@ -99,7 +98,9 @@ export default function DocumentEditor({
           return {
             ...section,
             children: section.children.map((child) =>
-              child.id === elementId ? { ...child, selected: !child.editable } : child
+              child.id === elementId
+                ? { ...child, selected: !child.editable }
+                : child
             ),
           };
         }
@@ -240,13 +241,12 @@ export default function DocumentEditor({
                     </span>
                   )}
                   {autoSelect ? (
-                    <textarea
-                      
+                    <input
                       value={element.title || ""}
                       onChange={(e) =>
                         updateContent(element.id, "title", e.target.value)
                       }
-                      className="flex-1 font-bold text-gray-900 text-lg bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:bg-blue-50/30 rounded px-2 py-1 -ml-2 transition-all"
+                      className="flex-1 font-bold text-gray-900 text-lg bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:bg-blue-50/30 rounded px-2 py-1 -ml-2 transition-all overflow-hidden resize-none"
                       placeholder="Section title..."
                     />
                   ) : (
@@ -261,7 +261,7 @@ export default function DocumentEditor({
               {autoSelect && (
                 <button
                   onClick={() => toggleSelection(element.id)}
-                  className="opacity-0 group-hover/header:opacity-100 transition-opacity shrink-0 mt-1 p-2 hover:bg-blue-50 rounded-lg border border-gray-200 bg-gray-900 shadow-sm "
+                  className="opacity-0 group-hover/header:opacity-100 transition-opacity shrink-0 mt-1 p-2 hover:bg-cyan-600 rounded-lg border border-gray-200 bg-gray-900 shadow-sm absolute top-45 right-60 -translate-50 z-50"
                   title={isSelected ? "Deselect" : "Select"}
                 >
                   {isSelected ? (
@@ -294,7 +294,7 @@ export default function DocumentEditor({
                         onChange={(e) => {
                           updateContent(element.id, "content", e.target.value);
                         }}
-                        className={`w-full text-gray-700 leading-relaxed bg-transparent border rounded-lg px-4 py-3 outline-none transition-all resize-none min-h-auto ${
+                        className={`w-full text-gray-700 leading-relaxed bg-transparent border rounded-lg px-4 py-3 outline-none transition-all resize-none min-h-auto overflow-hidden ${
                           isSelected
                             ? "border-blue-500 bg-blue-50/30"
                             : "border-transparent hover:border-gray-200 focus:border-blue-500 focus:bg-blue-50/30"
@@ -302,7 +302,6 @@ export default function DocumentEditor({
                         placeholder="Add content..."
                         style={{
                           height: "auto",
-                          minHeight: "80px",
                         }}
                         onInput={(e) => {
                           const target = e.target as HTMLTextAreaElement;
@@ -314,11 +313,11 @@ export default function DocumentEditor({
                       {/* Plus/Minus Button (only in selection mode, appears on hover) */}
                       <button
                         onClick={() => toggleSelection(element.id)}
-                        className="absolute top-45 right-60 -translate-50 opacity-0 group-hover/content:opacity-100 transition-opacity p-2 hover:bg-white rounded-lg border border-gray-200 bg-gray-900 shadow-sm "
+                        className="absolute top-45 right-60 -translate-50 opacity-0 group-hover/content:opacity-100 transition-opacity p-2 hover:bg-teal-600 rounded-lg border border-gray-200 bg-gray-900 shadow-sm z-50"
                         title={isSelected ? "Deselect" : "Select"}
                       >
                         {isSelected ? (
-                          <Minus className="w-4 h-4 text-gray-600" />
+                          <Minus className="w-4 h-4 text-gray-600 bg-blue-600" />
                         ) : (
                           <Plus className="w-4 h-4 text-gray-600" />
                         )}
@@ -344,8 +343,13 @@ export default function DocumentEditor({
 
           {/* Collapsed Preview */}
           {isSection && !isExpanded && element.children && (
-            <div className={`text-sm text-gray-500 italic mb-4 ${autoSelect ? 'ml-14' : 'ml-8'}`}>
-              {element.children.length} item{element.children.length !== 1 ? "s" : ""} hidden
+            <div
+              className={`text-sm text-gray-500 italic mb-4 ${
+                autoSelect ? "ml-14" : "ml-8"
+              }`}
+            >
+              {element.children.length} item
+              {element.children.length !== 1 ? "s" : ""} hidden
             </div>
           )}
         </div>
@@ -419,7 +423,6 @@ export default function DocumentEditor({
           </div>
         </div>
       </div>
-
       {/* Document Content */}
       <div className="flex-1 overflow-y-auto py-8">
         <div className="max-w-6xl mx-auto px-6">
@@ -456,8 +459,8 @@ export default function DocumentEditor({
                 )}
 
                 {/* Subtitle - Editable only in selection mode */}
-                {project.document.subtitle && (
-                  autoSelect ? (
+                {project.document.subtitle &&
+                  (autoSelect ? (
                     <input
                       type="text"
                       value={project.document.subtitle}
@@ -478,8 +481,7 @@ export default function DocumentEditor({
                     <p className="text-xl text-gray-600">
                       {project.document.subtitle}
                     </p>
-                  )
-                )}
+                  ))}
 
                 <div className="flex items-center justify-center gap-6 pt-4">
                   <div className="px-4 py-2 bg-white rounded-full text-gray-700 font-medium shadow-sm border border-gray-200">
@@ -505,7 +507,6 @@ export default function DocumentEditor({
           <div className="h-20"></div>
         </div>
       </div>
-
       {/* Context Menu (only in selection mode) */}
       {contextMenu && autoSelect && (
         <div
@@ -547,13 +548,15 @@ export default function DocumentEditor({
           </button>
         </div>
       )}
-
-      {/* Helper Text (only in selection mode) */}
+      {/* Helper Text (only in selection mode)
       {autoSelect && (
         <div className="fixed bottom-6 right-6 bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-medium">
           Edit Mode Active - Hover to select, right-click for options
         </div>
-      )}
+      )} */}
     </div>
   );
 }
+//TODO:
+//database operations
+//plus minus button fuction fixing
