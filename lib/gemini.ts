@@ -33,7 +33,7 @@ export async function analyzeDocumentWithGemini(
     // For DOCX files, extract text first (Gemini doesn't support DOCX directly)
     if (
       mimeType ===
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
       mimeType === "application/msword"
     ) {
       const result = await mammoth.extractRawText({ buffer: fileBuffer });
@@ -173,10 +173,6 @@ export async function analyzeTextContent(text: string): Promise<any> {
     const response = await genai.models.generateContent({
       model: "gemini-2.5-flash", // 1.5 Flash has 1M context window, better for large docs than 2.5-flash-exp potentially? Or verify 2.5 window.
       contents: [{ text: prompt }],
-      config: {
-        responseMimeType: "application/json",
-        maxOutputTokens: 8192, // Maximize output
-      }
     });
 
     const analysisText = response.text; // Correct method call .text() often simpler
@@ -185,8 +181,10 @@ export async function analyzeTextContent(text: string): Promise<any> {
 
     // Simple cleanup just in case
     let cleanText = analysisText.trim();
-    if (cleanText.startsWith("```json")) cleanText = cleanText.replace(/```json\n?/, "");
-    if (cleanText.startsWith("```")) cleanText = cleanText.replace(/```\n?/, "");
+    if (cleanText.startsWith("```json"))
+      cleanText = cleanText.replace(/```json\n?/, "");
+    if (cleanText.startsWith("```"))
+      cleanText = cleanText.replace(/```\n?/, "");
     if (cleanText.endsWith("```")) cleanText = cleanText.slice(0, -3);
 
     try {
@@ -200,15 +198,14 @@ export async function analyzeTextContent(text: string): Promise<any> {
         const sub = cleanText.substring(0, lastBrace + 1);
         try {
           return JSON.parse(sub);
-        } catch (e) {
+        } catch (e: unknown) {
           console.error("Repair failed");
           throw parseError;
         }
       }
       throw parseError;
     }
-
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error analyzing text:", error);
     throw new Error(`Failed to analyze text: ${error}`);
   }
@@ -218,7 +215,7 @@ export async function analyzeTextContent(text: string): Promise<any> {
  * Alternative: Fetch and analyze document from URL
  * Useful for remote PDFs
  */
-//eslint-disable-next-line
+
 export async function analyzeDocumentFromUrl(url: string): Promise<any> {
   try {
     const response = await fetch(url);
@@ -226,10 +223,10 @@ export async function analyzeDocumentFromUrl(url: string): Promise<any> {
     const buffer = Buffer.from(arrayBuffer);
 
     const mimeType = response.headers.get("content-type") || "application/pdf";
-    const filename = url.split("/").pop() || "document";
+    // const filename = url.split("/").pop() || "document";
 
     return await analyzeDocumentWithGemini(buffer, mimeType);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error analyzing document from URL:", error);
     throw new Error(`Failed to analyze document from URL: ${error}`);
   }
