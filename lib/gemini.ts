@@ -6,25 +6,6 @@ const genai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
-/**
- * Process document directly with Gemini (supports PDFs natively!)
- * Using the NEW @google/genai package
- */
-// interface DocumentAnalysis {
-//   title: string;
-//   subtitle: string;
-//   sections: Array<{
-//     id: string;
-//     type: "section" | "question";
-//     number: string;
-//     title?: string;
-//     content: string;
-//     expanded?: boolean;
-//     editable?: boolean;
-//     children?: unknown[];
-//   }>;
-// }
-
 export async function analyzeDocumentWithGemini(
   fileBuffer: Buffer,
   mimeType: string
@@ -134,7 +115,9 @@ Return ONLY valid JSON, no markdown code blocks or additional text.`;
 /**
  * Analyze text content (for DOCX files)
  */
-export async function analyzeTextContent(text: string): Promise<any> {
+export async function analyzeTextContent(
+  text: string
+): Promise<DocumentAnalysis> {
   try {
     console.log(`[Gemini] Analyzing text length: ${text.length}`);
 
@@ -188,8 +171,8 @@ export async function analyzeTextContent(text: string): Promise<any> {
     if (cleanText.endsWith("```")) cleanText = cleanText.slice(0, -3);
 
     try {
-      return JSON.parse(cleanText);
-    } catch (parseError) {
+      return JSON.parse(cleanText) as DocumentAnalysis;
+    } catch (parseError: unknown) {
       console.error("JSON Parse failed. Attempting repair...", parseError);
       // Very basic repair: try to find the last valid closing brace sequence
       // This is a naive heuristic
@@ -197,8 +180,8 @@ export async function analyzeTextContent(text: string): Promise<any> {
       if (lastBrace > -1) {
         const sub = cleanText.substring(0, lastBrace + 1);
         try {
-          return JSON.parse(sub);
-        } catch (error: unknown) {
+          return JSON.parse(sub) as DocumentAnalysis;
+        } catch {
           console.error("Repair failed");
           throw parseError;
         }
@@ -216,7 +199,9 @@ export async function analyzeTextContent(text: string): Promise<any> {
  * Useful for remote PDFs
  */
 
-export async function analyzeDocumentFromUrl(url: string): Promise<any> {
+export async function analyzeDocumentFromUrl(
+  url: string
+): Promise<DocumentAnalysis> {
   try {
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
